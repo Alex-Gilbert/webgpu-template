@@ -1,0 +1,24 @@
+[package]
+name = "demo_core"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+bevy_ecs.workspace = true
+crossbeam.workspace = true
+wgpu.workspace = true
+bytemuck = { workspace = true, features = ["derive"] }
+env_logger.workspace = true
+futures.workspace = true
+image = { workspace = true, features = ["jpeg"] }
+log.workspace = true
+rand.workspace = true
+paste.workspace = true
+include-wgsl-oil = { workspace = true, features = ["glam", "encase", "bytemuck", "wgpu", "minify"] }
+glam = { workspace = true, features = ["scalar-math"] }
+encase = { workspace = true, features = ["glam"] }
+wgpu_text.workspace = true
+web-time.workspace = true
+winit.workspace = true
+lib.workspace = true

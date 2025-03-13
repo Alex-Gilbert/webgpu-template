@@ -1,0 +1,10 @@
+[package]
+name = "lib"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+
+num-traits.workspace = true
+glam = { workspace = true, features = ["scalar-math"] }
