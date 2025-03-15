@@ -1,12 +1,12 @@
-#define TEXTURE_GROUP 0
-#define TEXTURE_BINDING 0
-#import include/texture_sampler.wgsl as diffuse
+#define CAMERA_GROUP 0
+#import include/camera.wgsl
 
 #define MODEL_GROUP 1
 #import include/model.wgsl
 
-#define CAMERA_GROUP 2
-#import include/camera.wgsl
+#define TEXTURE_GROUP 2
+#define TEXTURE_BINDING 0
+#import include/texture_sampler.wgsl as diffuse
 
 #import include/basic_vertex.wgsl
 

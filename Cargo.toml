@@ -3,7 +3,7 @@ resolver = "2"
 
 members = [
     "core",
-    "lib"
+    "winit"
 ]
 
 # package metadata that is identical for all crates in the workspace
@@ -14,14 +14,18 @@ edition = "2024"
 
 # dependencies whose versions are managed by the workspace
 [workspace.dependencies]
-lib = {path = "lib"}
+toml = "0.8.20"
 num-traits = "0.2.18"
+demo_core = { path = "core" }
+demo_winit = { path = "winit" }
 bevy_ecs = "0.13.2"
+serde_json.workspace = true
 bytemuck = "1.14.0"
 console_error_panic_hook = "0.1.6"
 console_log = "1.0"
 crossbeam = "0.8.4"
 encase = "0.7.0"
+serde = { version = "1.0.219", features = ["derive"] }
 env_logger = "0.10.1"
 futures = "0.3.29"
 glam = "0.25.0"

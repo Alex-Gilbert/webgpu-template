@@ -1,4 +1,4 @@
-use glam::{Mat4, Vec3};
+use glam::Mat4;
 
 use crate::{
     define_gpu_data_type,

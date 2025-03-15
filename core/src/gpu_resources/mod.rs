@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
+use bevy_ecs::world::World;
+
 pub mod layouts;
+pub mod pipelines;
 pub mod render_resources;
 mod shaders;
 pub mod types;

@@ -1,0 +1,11 @@
+label = "Diffuse Map"
+format = "Rgba8UnormSrgb"
+generate_mipmaps = false
+
+[sampler]
+address_mode_u = "Repeat"
+address_mode_v = "Repeat"
+mag_filter = "Linear"
+min_filter = "Linear"
+mipmap_filter = "Linear"
+anisotropy_clamp = 16

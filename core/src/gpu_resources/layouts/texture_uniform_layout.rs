@@ -1,13 +1,13 @@
 use bevy_ecs::system::Resource;
 
-use crate::utils;
+use crate::utils::texture::Texture;
 
 #[derive(Resource)]
-pub struct TextureBindGroupLayout<const N: usize> {
-    pub bind_group_layout: wgpu::BindGroupLayout,
+pub struct TextureUniformLayout<const N: usize> {
+    pub layout: wgpu::BindGroupLayout,
 }
 
-impl<const N: usize> TextureBindGroupLayout<N> {
+impl<const N: usize> TextureUniformLayout<N> {
     pub fn new(device: &wgpu::Device) -> Self {
         // Generate entries dynamically based on N (number of texture-sampler pairs)
         let mut entries = Vec::with_capacity(N * 2);
@@ -39,21 +39,23 @@ impl<const N: usize> TextureBindGroupLayout<N> {
             entries: &entries,
         });
 
-        Self { bind_group_layout }
+        Self {
+            layout: bind_group_layout,
+        }
     }
 
     /// Creates a bind group for a single texture-sampler pair at the specified index
     pub fn create_bind_group_for_slot(
         &self,
         device: &wgpu::Device,
-        texture: &utils::texture::Texture,
+        texture: &Texture,
         slot_index: usize,
     ) -> wgpu::BindGroup {
         assert!(slot_index < N, "Slot index out of bounds");
 
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some(&format!("texture_bind_group_slot_{}", slot_index)),
-            layout: &self.bind_group_layout,
+            layout: &self.layout,
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: (slot_index * 2) as u32,
@@ -71,7 +73,7 @@ impl<const N: usize> TextureBindGroupLayout<N> {
     pub fn create_complete_bind_group(
         &self,
         device: &wgpu::Device,
-        textures: &[&skyshark_utils::texture::Texture; N],
+        textures: &[&Texture; N],
     ) -> wgpu::BindGroup {
         let mut entries = Vec::with_capacity(N * 2);
 
@@ -89,7 +91,7 @@ impl<const N: usize> TextureBindGroupLayout<N> {
 
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("complete_texture_bind_group"),
-            layout: &self.bind_group_layout,
+            layout: &self.layout,
             entries: &entries,
         })
     }

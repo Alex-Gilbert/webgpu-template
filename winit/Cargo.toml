@@ -1,0 +1,14 @@
+[package]
+name = "demo_winit"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+winit.workspace = true
+wgpu.workspace = true
+demo_core.workspace = true
+paste.workspace = true
+web-time.workspace = true
+log.workspace = true
+futures.workspace = true

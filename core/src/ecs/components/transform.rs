@@ -1,6 +1,7 @@
 use bevy_ecs::component::Component;
 use glam::{Quat, Vec3};
-use lib::degrees_and_radians::{Deg, Rad};
+
+use crate::utils::degrees_and_radians::{Deg, Rad};
 
 /// Simple transform component to pair with the camera
 #[derive(Component, Default)]
@@ -30,8 +31,8 @@ impl Transform {
         }
     }
 
-    pub fn look_at(mut self, target: Vec3, up: Vec3) -> Self {
-        // Calculate forward direction (z-axis)
+    pub fn look_at(&mut self, target: Vec3, up: Vec3) {
+        // Calculate forard direction (z-axis)
         let forward = (target - self.translation).normalize();
 
         // Calculate right direction (x-axis) as cross product of forward and up
@@ -44,8 +45,6 @@ impl Transform {
         let mat3 = glam::Mat3::from_cols(right, corrected_up, forward);
         self.rotation = Quat::from_mat3(&mat3);
         self.matrix = None;
-
-        self
     }
 
     pub fn translate(&mut self, delta: Vec3) {

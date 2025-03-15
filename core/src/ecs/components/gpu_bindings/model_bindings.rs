@@ -1,5 +1,5 @@
-use bevy_ecs::{system::Resource, world::World};
-use glam::Mat4;
+use bevy_ecs::component::Component;
+use bevy_ecs::world::World;
 use wgpu::Queue;
 use wgpu::util::DeviceExt;
 
@@ -9,7 +9,9 @@ use crate::gpu_resources::{
     layouts::model_uniform_layout::ModelUniformLayout, types::gpu_model::GpuModel,
 };
 
-#[derive(Resource, Debug)]
+use crate::gpu_resources::types::gpu_type_macros::GpuUniformType;
+
+#[derive(Component, Debug)]
 pub struct ModelBindings {
     pub bind_group: wgpu::BindGroup,
     buffer: wgpu::Buffer,
@@ -36,7 +38,7 @@ impl ModelBindings {
         }
     }
 
-    pub fn update(&self, queue: &Queue, transform: &mut Transform) {
+    pub fn update(&mut self, queue: &Queue, transform: &mut Transform) {
         if self.gpu_model.update_model(transform) {
             queue.write_buffer(&self.buffer, 0, &self.gpu_model.as_buffer());
         }

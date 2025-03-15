@@ -11,16 +11,16 @@ pub fn initialize_bind_group_layouts(world: &mut World, device: &wgpu::Device) {
     world.insert_resource(model_uniform_layout::ModelUniformLayout::new(device));
 
     // Initialize texture uniform bind group layout and insert it into the world
-    world.insert_resource(texture_uniform_layout::TextureBindGroupLayout::<1>::new(
+    world.insert_resource(texture_uniform_layout::TextureUniformLayout::<1>::new(
         device,
     ));
-    world.insert_resource(texture_uniform_layout::TextureBindGroupLayout::<2>::new(
+    world.insert_resource(texture_uniform_layout::TextureUniformLayout::<2>::new(
         device,
     ));
-    world.insert_resource(texture_uniform_layout::TextureBindGroupLayout::<3>::new(
+    world.insert_resource(texture_uniform_layout::TextureUniformLayout::<3>::new(
         device,
     ));
-    world.insert_resource(texture_uniform_layout::TextureBindGroupLayout::<4>::new(
+    world.insert_resource(texture_uniform_layout::TextureUniformLayout::<4>::new(
         device,
     ));
 }

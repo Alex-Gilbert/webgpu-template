@@ -1,7 +1,7 @@
 use image::{GenericImageView, ImageResult};
 use serde::Deserialize;
-use std::fs;
-use std::path::{Path, PathBuf};
+// use std::fs;
+// use std::path::{Path, PathBuf};
 
 // Default sampler configuration when no TOML is provided
 const DEFAULT_SAMPLER_DESCRIPTOR: wgpu::SamplerDescriptor = wgpu::SamplerDescriptor {
@@ -92,7 +92,10 @@ impl Texture {
         let format = parse_texture_format(&metadata.format);
 
         // Create sampler descriptor from metadata
-        let sampler_descriptor = create_sampler_descriptor(&label, &metadata.sampler);
+        let descriptor_label = format!("{}_sampler", label);
+        let descriptor_label = descriptor_label.as_str();
+        let sampler_descriptor =
+            create_sampler_descriptor(Some(descriptor_label), &metadata.sampler);
 
         // Determine mip level count
         let mip_level_count = if metadata.generate_mipmaps.unwrap_or(false) {
@@ -197,12 +200,12 @@ fn create_texture(
 // Helper function to generate mipmaps
 // Note: This is a simplified version - a real implementation would need a proper compute or render pass
 fn generate_mipmaps(
-    device: &wgpu::Device,
-    queue: &wgpu::Queue,
-    texture: &wgpu::Texture,
-    format: wgpu::TextureFormat,
-    mip_level_count: u32,
-    size: wgpu::Extent3d,
+    _device: &wgpu::Device,
+    _queue: &wgpu::Queue,
+    _texture: &wgpu::Texture,
+    _format: wgpu::TextureFormat,
+    _mip_level_count: u32,
+    _size: wgpu::Extent3d,
 ) {
     // In a real implementation, you would:
     // 1. Create a compute shader or render pipeline to generate mipmaps
@@ -254,12 +257,12 @@ fn parse_texture_dimension(dimension_str: &Option<String>) -> wgpu::TextureDimen
 }
 
 // Helper function to create a sampler descriptor from metadata
-fn create_sampler_descriptor(
-    label: &str,
+fn create_sampler_descriptor<'a>(
+    label: Option<&'a str>,
     config: &Option<SamplerConfig>,
-) -> wgpu::SamplerDescriptor {
+) -> wgpu::SamplerDescriptor<'a> {
     let mut descriptor = wgpu::SamplerDescriptor {
-        label: Some(&format!("{}_sampler", label)),
+        label,
         ..DEFAULT_SAMPLER_DESCRIPTOR
     };
 
@@ -377,62 +380,34 @@ fn parse_border_color(color: &str) -> Option<wgpu::SamplerBorderColor> {
 
 // Load image macro with compile-time IO
 #[macro_export]
-macro_rules! load_image {
+macro_rules! include_texture {
     ($path:expr, $device:expr, $queue:expr) => {{
-        // Derive the metadata path from the image path
-        const PATH: &str = $path;
-        const METADATA_PATH: &str = concat!(
-            // Extract the path without extension
-            &PATH,
-            ".toml"
-        );
+        const METADATA_PATH: &str = concat!($path, ".toml");
 
         // Include bytes and metadata at compile time
-        let bytes = include_bytes!(PATH);
-
-        // Use a const fn to check if the file exists at compile time
-        const fn metadata_exists() -> bool {
-            // This relies on a build script to generate this information
-            // or could be replaced with a more direct approach if the Rust compiler adds this capability
-            #[cfg(feature = "metadata_file_exists")]
-            { true }
-            #[cfg(not(feature = "metadata_file_exists"))]
-            { false }
-        }
+        let bytes = include_bytes!($path);
 
         // Load the metadata if it exists
         #[allow(unused_variables)]
-        let metadata_opt = if metadata_exists() {
-            let toml_content = include_str!(METADATA_PATH);
+        let metadata_opt = {
+            let toml_content = include_str!(concat!($path, ".toml"));
             match toml::from_str(toml_content) {
                 Ok(meta) => Some(meta),
                 Err(err) => {
-                    eprintln!("Warning: Failed to parse metadata file {}: {}", METADATA_PATH, err);
+                    eprintln!(
+                        "Warning: Failed to parse metadata file {}: {}",
+                        METADATA_PATH, err
+                    );
                     None
                 }
             }
-        } else {
-            None
         };
 
         // Use from_bytes with the compile-time included data
-        Texture::from_bytes($device, $queue, bytes, metadata_opt)
-    }};
-
-    // Overload for specifying the metadata path explicitly
-    ($path:expr, $metadata_path:expr, $device:expr, $queue:expr) => {{
-        let bytes = include_bytes!($path);
-        let metadata_content = include_str!($metadata_path);
-
-        let metadata = match toml::from_str(metadata_content) {
-            Ok(meta) => Some(meta),
-            Err(err) => {
-                eprintln!("Warning: Failed to parse metadata file {}: {}", $metadata_path, err);
-                None
-            }
-        };
-
-        Texture::from_bytes($device, $queue, bytes, metadata)
+        match $crate::utils::texture::Texture::from_bytes($device, $queue, bytes, metadata_opt) {
+            Ok(texture) => texture,
+            Err(err) => panic!("Failed to load texture: {:?}", err),
+        }
     }};
 }
 
