@@ -8,7 +8,7 @@ use wgpu::{CommandBuffer, TextureView};
 use crate::{
     ecs::components::gpu_bindings::camera_bindings::CameraBindings,
     gpu_resources::render_resources::RenderResources,
-    utils::create_depth_texture::create_depth_texture,
+    utils::texture::{Texture, TextureBuilder},
 };
 
 use super::unlit_diffuse_sub_renderer::UnlitDiffuseSubRenderer;
@@ -23,8 +23,7 @@ pub struct RootRenderer {
 
     unlit_diffuse_sub_renderer: UnlitDiffuseSubRenderer,
 
-    depth_texture: wgpu::Texture,
-    depth_view: wgpu::TextureView,
+    depth_texture: Texture,
 }
 
 impl std::fmt::Debug for RootRenderer {
@@ -40,13 +39,16 @@ impl RootRenderer {
 
         let render_resources = world.get_resource::<RenderResources>().unwrap();
         let device = &render_resources.device;
-        let (depth_texture, depth_view) = create_depth_texture(device, width, height);
 
         let mut renderer = Self {
             system_state,
             unlit_diffuse_sub_renderer,
-            depth_texture,
-            depth_view,
+            depth_texture: TextureBuilder::new(device)
+                .size(width, height)
+                .depth_texture()
+                .label("Depth Texture")
+                .build()
+                .expect("Failed to create depth texture"),
         };
 
         renderer.set_size(device, width, height);
@@ -54,10 +56,12 @@ impl RootRenderer {
     }
 
     pub fn set_size(&mut self, device: &wgpu::Device, width: u32, height: u32) {
-        // Recreate depth texture with new size
-        let (depth_texture, depth_view) = create_depth_texture(device, width, height);
-        self.depth_texture = depth_texture;
-        self.depth_view = depth_view;
+        self.depth_texture = TextureBuilder::new(device)
+            .size(width, height)
+            .depth_texture()
+            .label("Depth Texture")
+            .build()
+            .expect("Failed to create depth texture");
     }
 
     pub fn render(&mut self, world: &World, output_view: &TextureView) -> CommandBuffer {
@@ -84,7 +88,7 @@ impl RootRenderer {
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.depth_view,
+                    view: &self.depth_texture.view,
                     depth_ops: Some(wgpu::Operations {
                         load: wgpu::LoadOp::Clear(1.0),
                         store: wgpu::StoreOp::Store,

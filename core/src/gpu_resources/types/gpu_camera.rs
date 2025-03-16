@@ -1,5 +1,3 @@
-use glam::Mat4;
-
 use crate::{
     define_gpu_data_type,
     ecs::components::{camera::Camera, transform::Transform},

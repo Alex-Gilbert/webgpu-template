@@ -6,7 +6,7 @@ use bevy_ecs::{
 use crate::{
     ecs::components::{
         gpu_bindings::model_bindings::ModelBindings,
-        materials::unlit_diffuse_material::UnlitDiffuseMaterial, mesh_filter::MeshFilter,
+        materials::unlit_diffuse_material::UnlitDiffuseMaterial, mesh_filter::BasicMeshFilter,
     },
     gpu_resources::pipelines::unlit_diffuse_pipeline::UnlitDiffusePipeline,
 };
@@ -18,7 +18,7 @@ type UnlitDiffuseSubRendererSystemState = SystemState<(
         'static,
         (
             &'static ModelBindings,
-            &'static MeshFilter,
+            &'static BasicMeshFilter,
             &'static UnlitDiffuseMaterial,
         ),
     >,
@@ -46,11 +46,7 @@ impl UnlitDiffuseSubRenderer {
             render_pass.set_bind_group(1, &model_binding.bind_group, &[]);
             render_pass.set_bind_group(2, &material.bind_group, &[]);
 
-            render_pass.set_vertex_buffer(0, mesh_filter.vertex_buffer.slice(..));
-            render_pass
-                .set_index_buffer(mesh_filter.index_buffer.slice(..), mesh_filter.index_format);
-
-            render_pass.draw_indexed(0..mesh_filter.index_count, 0, 0..1);
+            mesh_filter.filter.draw(render_pass);
         }
     }
 }

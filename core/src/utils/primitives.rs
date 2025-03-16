@@ -2,7 +2,8 @@ use std::f32::consts::PI;
 use wgpu::Device;
 
 use crate::{
-    ecs::components::mesh_filter::MeshFilter, gpu_resources::types::basic_vertex::BasicVertex,
+    ecs::components::mesh_filter::{BasicMeshFilter, MeshFilter},
+    gpu_resources::types::basic_vertex::BasicVertex,
 };
 
 /// Creates a plane mesh on the XZ plane with a specified size.
@@ -19,7 +20,7 @@ pub fn create_plane(
     depth: f32,
     width_segments: u32,
     depth_segments: u32,
-) -> MeshFilter {
+) -> BasicMeshFilter {
     let width_half = width / 2.0;
     let depth_half = depth / 2.0;
 
@@ -66,7 +67,9 @@ pub fn create_plane(
         }
     }
 
-    MeshFilter::new(device, &vertices, &indices)
+    BasicMeshFilter {
+        filter: MeshFilter::new(device, &vertices, &indices),
+    }
 }
 
 /// Creates a cube mesh with a specified size.
@@ -75,7 +78,7 @@ pub fn create_plane(
 /// * `device` - The WGPU device to create buffers on
 /// * `size` - The size of the cube in all dimensions
 /// * `segments` - Number of segments along each edge
-pub fn create_cube(device: &Device, size: f32, segments: u32) -> MeshFilter {
+pub fn create_cube(device: &Device, size: f32, segments: u32) -> BasicMeshFilter {
     let half_size = size / 2.0;
 
     let mut vertices = Vec::new();
@@ -202,7 +205,9 @@ pub fn create_cube(device: &Device, size: f32, segments: u32) -> MeshFilter {
         base_index,
     );
 
-    MeshFilter::new(device, &vertices, &indices)
+    BasicMeshFilter {
+        filter: MeshFilter::new(device, &vertices, &indices),
+    }
 }
 
 /// Creates a sphere mesh with a specified radius.
@@ -217,7 +222,7 @@ pub fn create_sphere(
     radius: f32,
     width_segments: u32,
     height_segments: u32,
-) -> MeshFilter {
+) -> BasicMeshFilter {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -266,7 +271,9 @@ pub fn create_sphere(
         }
     }
 
-    MeshFilter::new(device, &vertices, &indices)
+    BasicMeshFilter {
+        filter: MeshFilter::new(device, &vertices, &indices),
+    }
 }
 
 /// Creates a capsule mesh with specified radius and height.
@@ -287,7 +294,7 @@ pub fn create_capsule(
     radial_segments: u32,
     height_segments: u32,
     cap_segments: u32,
-) -> MeshFilter {
+) -> BasicMeshFilter {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -391,7 +398,9 @@ pub fn create_capsule(
     let bottom_start = cylinder_start + (height_segments + 1) * (radial_segments + 1);
     generate_grid_indices(bottom_start, radial_segments, cap_segments, &mut indices);
 
-    MeshFilter::new(device, &vertices, &indices)
+    BasicMeshFilter {
+        filter: MeshFilter::new(device, &vertices, &indices),
+    }
 }
 
 /// Creates a cylinder mesh with a specified radius and height.
@@ -412,7 +421,7 @@ pub fn create_cylinder(
     radial_segments: u32,
     height_segments: u32,
     open_ended: bool,
-) -> MeshFilter {
+) -> BasicMeshFilter {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -508,7 +517,9 @@ pub fn create_cylinder(
         add_cap(false);
     }
 
-    MeshFilter::new(device, &vertices, &indices)
+    BasicMeshFilter {
+        filter: MeshFilter::new(device, &vertices, &indices),
+    }
 }
 
 /// Creates a torus mesh with specified radii.
@@ -525,7 +536,7 @@ pub fn create_torus(
     tube_radius: f32,
     radial_segments: u32,
     tubular_segments: u32,
-) -> MeshFilter {
+) -> BasicMeshFilter {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -569,7 +580,9 @@ pub fn create_torus(
         }
     }
 
-    MeshFilter::new(device, &vertices, &indices)
+    BasicMeshFilter {
+        filter: MeshFilter::new(device, &vertices, &indices),
+    }
 }
 
 /// Creates a cone mesh with a specified radius and height.
@@ -588,7 +601,7 @@ pub fn create_cone(
     radial_segments: u32,
     height_segments: u32,
     open_ended: bool,
-) -> MeshFilter {
+) -> BasicMeshFilter {
     // A cone is just a cylinder with radius_top = 0
     create_cylinder(
         device,
