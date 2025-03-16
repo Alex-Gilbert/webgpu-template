@@ -1,0 +1,27 @@
+[package]
+name = "demo_native"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+default-run = "demo"
+
+[lib]
+name = "demo_native"
+path = "src/lib.rs"
+
+[[bin]]
+name = "demo"
+path = "src/main.rs"
+
+[dependencies]
+crossbeam.workspace = true
+demo_winit.workspace = true
+demo_core.workspace = true
+futures.workspace = true
+log.workspace = true
+winit.workspace = true
+web-time.workspace = true
+serde.workspace = true
+tokio = { version = "1.0", features = ["full"] }
+reqwest = "0.12.12"
+env_logger.workspace = true

@@ -11,7 +11,7 @@ pub fn update_model_bindings_system(
 ) {
     let queue = &render_resources.queue;
 
-    for (mut transform, mut bindings) in model_query.iter_mut() {
-        bindings.update(&render_resources.queue, transform.into_inner());
+    for (transform, mut bindings) in model_query.iter_mut() {
+        bindings.update(queue, transform.into_inner());
     }
 }

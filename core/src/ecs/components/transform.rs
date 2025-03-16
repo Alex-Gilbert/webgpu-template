@@ -53,7 +53,7 @@ impl Transform {
     }
 
     pub fn rotate(&mut self, delta: Quat) {
-        self.rotation = self.rotation * delta;
+        self.rotation *= delta;
         self.matrix = None;
     }
 
@@ -90,7 +90,7 @@ impl Transform {
     }
 
     pub fn rotate_around(&mut self, axis: Vec3, angle: Rad<f32>) {
-        self.rotation = self.rotation * Quat::from_axis_angle(axis, angle.0);
+        self.rotation *= Quat::from_axis_angle(axis.normalize(), angle.0);
         self.matrix = None;
     }
 

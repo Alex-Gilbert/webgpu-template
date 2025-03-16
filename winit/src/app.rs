@@ -10,8 +10,11 @@ use winit::{
     application::ApplicationHandler,
     event::{ElementState, KeyEvent, WindowEvent},
     event_loop::ControlFlow,
-    keyboard::{Key, NamedKey, PhysicalKey},
+    keyboard::{Key, KeyCode, NamedKey, PhysicalKey},
 };
+
+#[cfg(feature = "debug-renderdoc")]
+use renderdoc::{RenderDoc, V141};
 
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, Instant};
@@ -42,6 +45,9 @@ struct DemoWinitAppInit<H> {
 
     #[cfg(target_arch = "wasm32")]
     frame_count: u32,
+
+    #[cfg(feature = "debug-renderdoc")]
+    renderdoc: RenderDoc<V141>,
 
     pub demo_core: Core,
 }
@@ -101,21 +107,68 @@ impl<H: DemoWinitHandler> DemoWinitApp<H> {
 
         let window = uninit.demo_handler.build_window(event_loop).unwrap();
         let window = Arc::new(window);
+
+        // When creating the WGPU instance, be more explicit about backends
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::all(),
-            flags: Default::default(),
+            backends: wgpu::Backends::VULKAN, // Or try PRIMARY if VULKAN doesn't work
             dx12_shader_compiler: Default::default(),
-            gles_minor_version: Default::default(),
+            #[cfg(feature = "debug-renderdoc")]
+            flags: wgpu::InstanceFlags::default(), // No validation with RenderDoc
+            #[cfg(not(feature = "debug-renderdoc"))]
+            flags: wgpu::InstanceFlags::DEBUG | wgpu::InstanceFlags::VALIDATION,
+            // Specify GLES version requirements
+            gles_minor_version: wgpu::Gles3MinorVersion::Automatic,
         });
+
         let surface = instance.create_surface(window.clone()).unwrap();
-        let adapter =
-            futures::executor::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
+        let adapter = {
+            let mut options = wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
                 compatible_surface: Some(&surface),
                 force_fallback_adapter: false,
-            }))
-            .unwrap();
+            };
 
+            // Try to get an adapter with the preferred options
+            let mut adapter = futures::executor::block_on(instance.request_adapter(&options));
+
+            // If that failed, try with low power preference
+            if adapter.is_none() {
+                println!("Failed to find high-performance adapter, trying low-power...");
+                options.power_preference = wgpu::PowerPreference::LowPower;
+                adapter = futures::executor::block_on(instance.request_adapter(&options));
+            }
+
+            // If that still failed, try without surface compatibility (headless mode)
+            if adapter.is_none() {
+                println!("Failed to find adapter with surface compatibility, trying headless...");
+                options.compatible_surface = None;
+                adapter = futures::executor::block_on(instance.request_adapter(&options));
+            }
+
+            // Last resort: allow fallback adapter (may be software rendering)
+            if adapter.is_none() {
+                println!("No hardware adapters found, trying fallback adapter...");
+                options.force_fallback_adapter = true;
+                adapter = futures::executor::block_on(instance.request_adapter(&options));
+            }
+
+            // Finally, either return the adapter or exit with a useful error
+            match adapter {
+                Some(adapter) => {
+                    let info = adapter.get_info();
+                    println!("Using adapter: {} ({:?})", info.name, info.backend);
+                    adapter
+                }
+                None => {
+                    eprintln!("ERROR: Failed to find any compatible graphics adapter");
+                    eprintln!(
+                        "This may be caused by RenderDoc interfering with graphics initialization."
+                    );
+                    eprintln!("Try running with RENDERDOC_HOOK_VULKAN=0 or without RenderDoc.");
+                    std::process::exit(1);
+                }
+            }
+        };
         let (device, queue) = futures::executor::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
@@ -133,12 +186,31 @@ impl<H: DemoWinitHandler> DemoWinitApp<H> {
 
         let surface_capabilities = surface.get_capabilities(&adapter);
 
+        // Check if we have any formats at all
+        if surface_capabilities.formats.is_empty() {
+            eprintln!("ERROR: No compatible surface formats found for this adapter!");
+            eprintln!(
+                "This might be caused by RenderDoc interfering with surface capabilities detection."
+            );
+            eprintln!("Adapter info: {:?}", adapter.get_info());
+            std::process::exit(1);
+        }
+
+        // Choose a format with better error handling
         let surface_format = surface_capabilities
             .formats
             .iter()
             .copied()
             .find(TextureFormat::is_srgb)
-            .unwrap_or(*surface_capabilities.formats.first().unwrap());
+            .unwrap_or_else(|| {
+                println!(
+                    "No sRGB format available, using first available format instead: {:?}",
+                    surface_capabilities.formats[0]
+                );
+                surface_capabilities.formats[0]
+            });
+
+        println!("Selected surface format: {:?}", surface_format);
 
         let physical_size = window.inner_size();
 
@@ -196,6 +268,9 @@ impl<H: DemoWinitHandler> DemoWinitApp<H> {
             #[cfg(target_arch = "wasm32")]
             frame_count: 0,
             time_of_last_update: Instant::now(),
+
+            #[cfg(feature = "debug-renderdoc")]
+            renderdoc: RenderDoc::<V141>::new().expect("Failed to initialize RenderDoc"),
         };
 
         self.inner = DemoWinitAppInner::Init(init);
@@ -334,7 +409,18 @@ impl<H: DemoWinitHandler + 'static> ApplicationHandler<DemoWinitEvent> for DemoW
                     },
                 ..
             } => match state {
-                ElementState::Pressed => demo_winit.demo_core.key_down(key_code),
+                ElementState::Pressed => {
+                    #[cfg(feature = "debug-renderdoc")]
+                    match key_code {
+                        KeyCode::F10 => demo_winit.renderdoc.trigger_capture(),
+                        // KeyCode::F8 => demo_winit.renderdoc.start(),
+                        // KeyCode::F9 => demo_winit.renderdoc.end_capture(),
+                        _ => demo_winit.demo_core.key_down(key_code),
+                    }
+
+                    #[cfg(not(feature = "debug-renderdoc"))]
+                    demo_winit.demo_core.key_down(key_code)
+                }
                 ElementState::Released => {
                     match logical_key.as_ref() {
                         Key::Named(NamedKey::Escape) => {
@@ -462,7 +548,7 @@ impl<H: DemoWinitHandler + 'static> ApplicationHandler<DemoWinitEvent> for DemoW
         event_loop: &winit::event_loop::ActiveEventLoop,
         event: DemoWinitEvent,
     ) {
-        let demo_winit = self.assume_init();
+        let _demo_winit = self.assume_init();
         match event {
             DemoWinitEvent::Kill => {
                 #[cfg(target_arch = "wasm32")]

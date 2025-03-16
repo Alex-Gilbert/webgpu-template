@@ -132,19 +132,19 @@ impl Camera {
                 ProjectionType::Perspective => {
                     match (self.infinite_projection, self.reversed_depth) {
                         (true, false) => {
-                            Mat4::perspective_infinite_rh(self.fov, self.aspect_ratio, self.near)
+                            Mat4::perspective_infinite_lh(self.fov, self.aspect_ratio, self.near)
                         }
 
-                        (true, true) => Mat4::perspective_infinite_reverse_rh(
+                        (true, true) => Mat4::perspective_infinite_reverse_lh(
                             self.fov,
                             self.aspect_ratio,
                             self.near,
                         ),
                         (false, false) => {
-                            Mat4::perspective_rh(self.fov, self.aspect_ratio, self.near, self.far)
+                            Mat4::perspective_lh(self.fov, self.aspect_ratio, self.near, self.far)
                         }
                         (false, true) => {
-                            Mat4::perspective_rh(self.fov, self.aspect_ratio, self.far, self.near)
+                            Mat4::perspective_lh(self.fov, self.aspect_ratio, self.far, self.near)
                         }
                     }
                 }
@@ -156,7 +156,7 @@ impl Camera {
                     // Create orthographic projection matrix
                     if self.reversed_depth {
                         // Reversed depth for orthographic
-                        Mat4::orthographic_rh(
+                        Mat4::orthographic_lh(
                             -width / 2.0,
                             width / 2.0,
                             -height / 2.0,
@@ -165,7 +165,7 @@ impl Camera {
                             self.near, // Swap near and far for reversed depth
                         )
                     } else {
-                        Mat4::orthographic_rh(
+                        Mat4::orthographic_lh(
                             -width / 2.0,
                             width / 2.0,
                             -height / 2.0,

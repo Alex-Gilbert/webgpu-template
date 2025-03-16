@@ -9,8 +9,8 @@ define_gpu_data_type!(super::super::shaders::gpu_camera::naga::types::CameraUnif
 
 impl GpuCamera {
     pub fn from_camera_and_transform(camera: &mut Camera, transform: &mut Transform) -> Self {
-        let view = transform.get_trs_matrix();
-        let proj = OPENGL_TO_WGPU_MATRIX * camera.get_projection_matrix();
+        let view = transform.get_trs_matrix().inverse();
+        let proj = camera.get_projection_matrix();
         Self {
             view,
             proj,
@@ -20,8 +20,8 @@ impl GpuCamera {
 
     pub fn update_view_proj(&mut self, camera: &mut Camera, transform: &mut Transform) -> bool {
         if camera.needs_update() || transform.needs_update() {
-            self.view = transform.get_trs_matrix();
-            self.proj = OPENGL_TO_WGPU_MATRIX * camera.get_projection_matrix();
+            self.view = transform.get_trs_matrix().inverse();
+            self.proj = camera.get_projection_matrix();
             self.view_proj = self.proj * self.view;
             true
         } else {
@@ -29,11 +29,3 @@ impl GpuCamera {
         }
     }
 }
-
-#[rustfmt::skip]
-const OPENGL_TO_WGPU_MATRIX: Mat4 = Mat4::from_cols_array_2d(&[
-    [1.0, 0.0, 0.0, 0.0],
-    [0.0, 1.0, 0.0, 0.0],
-    [0.0, 0.0, 0.5, 0.5],
-    [0.0, 0.0, 0.0, 1.0],
-]);

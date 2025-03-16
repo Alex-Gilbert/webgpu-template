@@ -3,7 +3,8 @@ resolver = "2"
 
 members = [
     "core",
-    "winit"
+    "winit",
+    "native"
 ]
 
 # package metadata that is identical for all crates in the workspace

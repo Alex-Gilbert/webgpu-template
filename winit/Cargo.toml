@@ -12,3 +12,8 @@ paste.workspace = true
 web-time.workspace = true
 log.workspace = true
 futures.workspace = true
+
+renderdoc = { version = "0.12.1", optional = true }
+
+[features]
+debug-renderdoc = ["renderdoc"]

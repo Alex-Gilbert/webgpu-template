@@ -218,6 +218,7 @@ pub struct Mouse {
     pub delta_scroll_y: f64,
     pub buttons: HashMap<MouseButton, MouseButtonState>,
 }
+
 impl Mouse {
     fn new() -> Mouse {
         Self {
