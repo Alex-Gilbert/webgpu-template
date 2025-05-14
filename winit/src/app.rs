@@ -105,112 +105,29 @@ impl<H: DemoWinitHandler> DemoWinitApp<H> {
             _ => return,
         };
 
+        // build window
         let window = uninit.demo_handler.build_window(event_loop).unwrap();
         let window = Arc::new(window);
 
-        // When creating the WGPU instance, be more explicit about backends
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::VULKAN, // Or try PRIMARY if VULKAN doesn't work
-            dx12_shader_compiler: Default::default(),
-            #[cfg(feature = "debug-renderdoc")]
-            flags: wgpu::InstanceFlags::default(), // No validation with RenderDoc
-            #[cfg(not(feature = "debug-renderdoc"))]
-            flags: wgpu::InstanceFlags::DEBUG | wgpu::InstanceFlags::VALIDATION,
-            // Specify GLES version requirements
-            gles_minor_version: wgpu::Gles3MinorVersion::Automatic,
-        });
+        // cerate instance
+        let instance = uninit.demo_handler.create_instance();
 
-        let surface = instance.create_surface(window.clone()).unwrap();
-        let adapter = {
-            let mut options = wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::HighPerformance,
-                compatible_surface: Some(&surface),
-                force_fallback_adapter: false,
-            };
+        // create surface
+        let surface = H::create_surface(&instance, &window);
 
-            // Try to get an adapter with the preferred options
-            let mut adapter = futures::executor::block_on(instance.request_adapter(&options));
+        //pick adapter
+        let adapter = H::select_adapter(&instance, Some(&surface));
+        let info = adapter.get_info();
+        println!("Adapter: {} ({:?})", info.name, info.backend);
 
-            // If that failed, try with low power preference
-            if adapter.is_none() {
-                println!("Failed to find high-performance adapter, trying low-power...");
-                options.power_preference = wgpu::PowerPreference::LowPower;
-                adapter = futures::executor::block_on(instance.request_adapter(&options));
-            }
+        // get the device and queue
+        let (device, queue) = uninit.demo_handler.request_device(&adapter);
 
-            // If that still failed, try without surface compatibility (headless mode)
-            if adapter.is_none() {
-                println!("Failed to find adapter with surface compatibility, trying headless...");
-                options.compatible_surface = None;
-                adapter = futures::executor::block_on(instance.request_adapter(&options));
-            }
+        // cinfigur surface
+        let size = window.inner_size();
+        let surface_config = H::configure_surface(&surface, &adapter, size);
 
-            // Last resort: allow fallback adapter (may be software rendering)
-            if adapter.is_none() {
-                println!("No hardware adapters found, trying fallback adapter...");
-                options.force_fallback_adapter = true;
-                adapter = futures::executor::block_on(instance.request_adapter(&options));
-            }
-
-            // Finally, either return the adapter or exit with a useful error
-            match adapter {
-                Some(adapter) => {
-                    let info = adapter.get_info();
-                    println!("Using adapter: {} ({:?})", info.name, info.backend);
-                    adapter
-                }
-                None => {
-                    eprintln!("ERROR: Failed to find any compatible graphics adapter");
-                    eprintln!(
-                        "This may be caused by RenderDoc interfering with graphics initialization."
-                    );
-                    eprintln!("Try running with RENDERDOC_HOOK_VULKAN=0 or without RenderDoc.");
-                    std::process::exit(1);
-                }
-            }
-        };
-        let (device, queue) = futures::executor::block_on(adapter.request_device(
-            &wgpu::DeviceDescriptor {
-                label: None,
-                required_features: Default::default(),
-                required_limits: wgpu::Limits {
-                    // we need a bigger final texture for desktop.
-                    #[cfg(not(target_arch = "wasm32"))]
-                    max_texture_dimension_2d: 8192,
-                    ..wgpu::Limits::downlevel_webgl2_defaults()
-                },
-            },
-            None,
-        ))
-        .unwrap();
-
-        let surface_capabilities = surface.get_capabilities(&adapter);
-
-        // Check if we have any formats at all
-        if surface_capabilities.formats.is_empty() {
-            eprintln!("ERROR: No compatible surface formats found for this adapter!");
-            eprintln!(
-                "This might be caused by RenderDoc interfering with surface capabilities detection."
-            );
-            eprintln!("Adapter info: {:?}", adapter.get_info());
-            std::process::exit(1);
-        }
-
-        // Choose a format with better error handling
-        let surface_format = surface_capabilities
-            .formats
-            .iter()
-            .copied()
-            .find(TextureFormat::is_srgb)
-            .unwrap_or_else(|| {
-                println!(
-                    "No sRGB format available, using first available format instead: {:?}",
-                    surface_capabilities.formats[0]
-                );
-                surface_capabilities.formats[0]
-            });
-
-        println!("Selected surface format: {:?}", surface_format);
+        surface.configure(&device, &surface_config);
 
         let physical_size = window.inner_size();
 
@@ -226,18 +143,6 @@ impl<H: DemoWinitHandler> DemoWinitApp<H> {
 
         info!("width: {}", target_buffer_width);
         info!("height: {}", target_buffer_height);
-
-        let surface_config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface_format,
-            width: target_buffer_width,
-            height: target_buffer_height,
-            present_mode: *surface_capabilities.present_modes.first().unwrap(),
-            alpha_mode: *surface_capabilities.alpha_modes.first().unwrap(),
-            view_formats: Vec::new(),
-            desired_maximum_frame_latency: 2,
-        };
-        surface.configure(&device, &surface_config);
 
         let device = Arc::new(device);
         let queue = Arc::new(queue);
