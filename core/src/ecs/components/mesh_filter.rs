@@ -1,6 +1,6 @@
 use crate::{
     gpu_resources::types::basic_vertex::BasicVertex,
-    utils::buffer::{Buffer, BufferBuilder},
+    utils::buffer::{Buffer, BufferBuilder, DynamicBuffer},
 };
 use bevy_ecs::component::Component;
 use bytemuck::{Pod, Zeroable};
@@ -26,6 +26,13 @@ pub struct BasicMeshFilter {
 pub struct MeshFilter<V: Pod + Zeroable, I: IndexType> {
     pub vertex_buffer: Buffer<V>,
     pub index_buffer: Buffer<I>,
+    pub index_count: u32,
+    pub index_format: wgpu::IndexFormat,
+}
+
+pub struct DynamicMeshFilter<V: Pod + Zeroable, I: IndexType> {
+    pub vertex_buffer: DynamicBuffer<V>,
+    pub index_buffer: DynamicBuffer<I>,
     pub index_count: u32,
     pub index_format: wgpu::IndexFormat,
 }
