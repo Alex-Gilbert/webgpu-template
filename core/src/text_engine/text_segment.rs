@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use crate::asset_management::Handle;
-
 use super::{
     font_style::FontStyle,
     interpolation_value::InterpolationValue,

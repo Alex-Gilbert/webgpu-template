@@ -61,7 +61,12 @@ impl Srgb {
 
     /// Set alpha channel
     pub fn with_alpha(&self, alpha: f32) -> Self {
-        Self { r: self.r, g: self.g, b: self.b, a: alpha }
+        Self {
+            r: self.r,
+            g: self.g,
+            b: self.b,
+            a: alpha,
+        }
     }
 
     /// Naive sRGB blending (fast but mathematically incorrect)
@@ -87,19 +92,66 @@ impl Srgb {
 
     /// HSV blending with shortest hue path
     pub fn blend_hsv_shortest(&self, other: &Srgb, t: f32) -> Self {
-        self.to_hsv().blend_shortest_hue(&other.to_hsv(), t).to_srgb()
+        self.to_hsv()
+            .blend_shortest_hue(&other.to_hsv(), t)
+            .to_srgb()
     }
 
     /// Common sRGB colors
-    pub const WHITE: Self = Self { r: 1.0, g: 1.0, b: 1.0, a: 1.0 };
-    pub const BLACK: Self = Self { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
-    pub const RED: Self = Self { r: 1.0, g: 0.0, b: 0.0, a: 1.0 };
-    pub const GREEN: Self = Self { r: 0.0, g: 1.0, b: 0.0, a: 1.0 };
-    pub const BLUE: Self = Self { r: 0.0, g: 0.0, b: 1.0, a: 1.0 };
-    pub const YELLOW: Self = Self { r: 1.0, g: 1.0, b: 0.0, a: 1.0 };
-    pub const CYAN: Self = Self { r: 0.0, g: 1.0, b: 1.0, a: 1.0 };
-    pub const MAGENTA: Self = Self { r: 1.0, g: 0.0, b: 1.0, a: 1.0 };
-    pub const TRANSPARENT: Self = Self { r: 0.0, g: 0.0, b: 0.0, a: 0.0 };
+    pub const WHITE: Self = Self {
+        r: 1.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const BLACK: Self = Self {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const RED: Self = Self {
+        r: 1.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const GREEN: Self = Self {
+        r: 0.0,
+        g: 1.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const BLUE: Self = Self {
+        r: 0.0,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const YELLOW: Self = Self {
+        r: 1.0,
+        g: 1.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const CYAN: Self = Self {
+        r: 0.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const MAGENTA: Self = Self {
+        r: 1.0,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const TRANSPARENT: Self = Self {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 0.0,
+    };
 }
 
 /// An HSV color with easy conversion methods
@@ -114,11 +166,11 @@ pub struct Hsv {
 impl Hsv {
     /// Create from HSV values
     pub fn new(h: f32, s: f32, v: f32, a: f32) -> Self {
-        Self { 
-            h: h.rem_euclid(360.0), 
-            s: s.clamp(0.0, 1.0), 
-            v: v.clamp(0.0, 1.0), 
-            a: a.clamp(0.0, 1.0) 
+        Self {
+            h: h.rem_euclid(360.0),
+            s: s.clamp(0.0, 1.0),
+            v: v.clamp(0.0, 1.0),
+            a: a.clamp(0.0, 1.0),
         }
     }
 
@@ -134,7 +186,12 @@ impl Hsv {
 
     /// Set alpha channel
     pub fn with_alpha(&self, alpha: f32) -> Self {
-        Self { h: self.h, s: self.s, v: self.v, a: alpha }
+        Self {
+            h: self.h,
+            s: self.s,
+            v: self.v,
+            a: alpha,
+        }
     }
 
     /// Adjust hue by degrees
@@ -166,7 +223,7 @@ impl Hsv {
     /// HSV blending with shortest hue path (better for color wheels)
     pub fn blend_shortest_hue(&self, other: &Hsv, t: f32) -> Self {
         let t = t.clamp(0.0, 1.0);
-        
+
         // Calculate shortest distance between hues
         let mut hue_diff = other.h - self.h;
         if hue_diff > 180.0 {
@@ -174,7 +231,7 @@ impl Hsv {
         } else if hue_diff < -180.0 {
             hue_diff += 360.0;
         }
-        
+
         Self::new(
             self.h + hue_diff * t,
             self.s * (1.0 - t) + other.s * t,
@@ -190,18 +247,61 @@ impl Hsv {
 
     /// Linear space blending
     pub fn blend_linear(&self, other: &Hsv, t: f32) -> Self {
-        self.to_linear().blend(&other.to_linear(), t).to_srgb().to_hsv()
+        self.to_linear()
+            .blend(&other.to_linear(), t)
+            .to_srgb()
+            .to_hsv()
     }
 
     /// Common HSV colors
-    pub const RED: Self = Self { h: 0.0, s: 1.0, v: 1.0, a: 1.0 };
-    pub const YELLOW: Self = Self { h: 60.0, s: 1.0, v: 1.0, a: 1.0 };
-    pub const GREEN: Self = Self { h: 120.0, s: 1.0, v: 1.0, a: 1.0 };
-    pub const CYAN: Self = Self { h: 180.0, s: 1.0, v: 1.0, a: 1.0 };
-    pub const BLUE: Self = Self { h: 240.0, s: 1.0, v: 1.0, a: 1.0 };
-    pub const MAGENTA: Self = Self { h: 300.0, s: 1.0, v: 1.0, a: 1.0 };
-    pub const WHITE: Self = Self { h: 0.0, s: 0.0, v: 1.0, a: 1.0 };
-    pub const BLACK: Self = Self { h: 0.0, s: 0.0, v: 0.0, a: 1.0 };
+    pub const RED: Self = Self {
+        h: 0.0,
+        s: 1.0,
+        v: 1.0,
+        a: 1.0,
+    };
+    pub const YELLOW: Self = Self {
+        h: 60.0,
+        s: 1.0,
+        v: 1.0,
+        a: 1.0,
+    };
+    pub const GREEN: Self = Self {
+        h: 120.0,
+        s: 1.0,
+        v: 1.0,
+        a: 1.0,
+    };
+    pub const CYAN: Self = Self {
+        h: 180.0,
+        s: 1.0,
+        v: 1.0,
+        a: 1.0,
+    };
+    pub const BLUE: Self = Self {
+        h: 240.0,
+        s: 1.0,
+        v: 1.0,
+        a: 1.0,
+    };
+    pub const MAGENTA: Self = Self {
+        h: 300.0,
+        s: 1.0,
+        v: 1.0,
+        a: 1.0,
+    };
+    pub const WHITE: Self = Self {
+        h: 0.0,
+        s: 0.0,
+        v: 1.0,
+        a: 1.0,
+    };
+    pub const BLACK: Self = Self {
+        h: 0.0,
+        s: 0.0,
+        v: 0.0,
+        a: 1.0,
+    };
 }
 
 /// A color type that handles sRGB/linear conversions for shader use
@@ -333,16 +433,48 @@ impl Color {
 
     /// HSV blending with shortest hue path
     pub fn blend_hsv_shortest(&self, other: &Color, t: f32) -> Self {
-        self.to_hsv().blend_shortest_hue(&other.to_hsv(), t).to_linear()
+        self.to_hsv()
+            .blend_shortest_hue(&other.to_hsv(), t)
+            .to_linear()
     }
 
     /// Common linear colors
-    pub const WHITE: Self = Self { r: 1.0, g: 1.0, b: 1.0, a: 1.0 };
-    pub const BLACK: Self = Self { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
-    pub const RED: Self = Self { r: 1.0, g: 0.0, b: 0.0, a: 1.0 };
-    pub const GREEN: Self = Self { r: 0.0, g: 1.0, b: 0.0, a: 1.0 };
-    pub const BLUE: Self = Self { r: 0.0, g: 0.0, b: 1.0, a: 1.0 };
-    pub const TRANSPARENT: Self = Self { r: 0.0, g: 0.0, b: 0.0, a: 0.0 };
+    pub const WHITE: Self = Self {
+        r: 1.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const BLACK: Self = Self {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const RED: Self = Self {
+        r: 1.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const GREEN: Self = Self {
+        r: 0.0,
+        g: 1.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const BLUE: Self = Self {
+        r: 0.0,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const TRANSPARENT: Self = Self {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 0.0,
+    };
 }
 
 // RGB <-> HSV conversion functions
@@ -448,7 +580,12 @@ impl From<Color> for Hsv {
 // Conversions from common types to Srgb
 impl From<wgpu::Color> for Srgb {
     fn from(color: wgpu::Color) -> Self {
-        Self::new(color.r as f32, color.g as f32, color.b as f32, color.a as f32)
+        Self::new(
+            color.r as f32,
+            color.g as f32,
+            color.b as f32,
+            color.a as f32,
+        )
     }
 }
 
@@ -476,7 +613,3 @@ impl From<wgpu::Color> for Color {
         Srgb::from(color).into()
     }
 }
-
-impl From<[f32; 4]> for Color {
-    fn from(rgba: [f32; 4]) -> Self {
-        Srgb::from

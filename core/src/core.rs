@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use bevy_ecs::{schedule::Schedule, world::World};
-use glam::vec3;
+use glam::{Vec2, vec3};
 use log::trace;
 use rand::Rng;
 use wgpu::{CommandBuffer, TextureFormat};
@@ -30,8 +30,9 @@ use crate::{
     },
     gpu_resources, include_texture,
     render::root_renderer::RootRenderer,
+    text_engine::text_object::TextObject,
     traits::{apc_traits::ApcHandler, http_traits::HttpRequester},
-    utils::primitives,
+    utils::{Bounds, primitives},
 };
 
 pub struct Core {
@@ -89,7 +90,7 @@ impl Core {
         let root_renderer = RootRenderer::new(&mut world, render_width, render_height);
 
         // spawn a cube
-        let texture = include_texture!("assets/textures/handsome.jpg", &device, &queue);
+        let texture = include_texture!("media/textures/handsome.jpg", &device, &queue);
 
         let mut rng = rand::thread_rng();
         for _ in 0..100 {
@@ -118,6 +119,12 @@ impl Core {
                 cube_material,
                 cube_rotate_component,
             ));
+        }
+
+        // add a text object
+        {
+            let mut text_object = TextObject::new("Hello, World!".to_string())
+                .with_bounds(Bounds::new_with_size(Vec2::new(30.0, 30.0)).centered_at(Vec2::ZERO));
         }
 
         let mut early_update_schedule = Schedule::default();

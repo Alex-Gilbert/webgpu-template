@@ -1,9 +1,6 @@
 use std::{collections::HashMap, marker::PhantomData};
 
-use crate::{
-    asset_management::Handle, ecs::components::mesh_filter::MeshFilter,
-    gpu_resources::types::font_types::FontVertex, utils::Bounds,
-};
+use crate::{gpu_resources::types::font_types::FontVertex, utils::Bounds};
 
 use super::{
     font_style::FontStyle,
