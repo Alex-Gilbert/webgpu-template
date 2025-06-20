@@ -1,4 +1,4 @@
-use bevy_ecs::{component::Component, world::World};
+use bevy_ecs::world::World;
 
 use crate::{
     gpu_resources::{
@@ -7,9 +7,8 @@ use crate::{
     utils::texture::Texture,
 };
 
-#[derive(Component)]
 pub struct UnlitDiffuseMaterial {
-    pub bind_group: wgpu::BindGroup,
+    pub texture_bind_group: wgpu::BindGroup,
 }
 
 impl UnlitDiffuseMaterial {
@@ -21,8 +20,9 @@ impl UnlitDiffuseMaterial {
 
         let device = &render_resources.device;
 
-        let bind_group = texture_uniform_layout.create_complete_bind_group(device, &[texture]);
+        let texture_bind_group =
+            texture_uniform_layout.create_complete_bind_group(device, &[texture]);
 
-        Self { bind_group }
+        Self { texture_bind_group }
     }
 }

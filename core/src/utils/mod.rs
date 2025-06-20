@@ -1,3 +1,4 @@
+use glam::Vec2;
 use serde::Deserialize;
 
 pub mod buffer;

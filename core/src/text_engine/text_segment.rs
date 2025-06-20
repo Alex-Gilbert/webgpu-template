@@ -1,10 +1,6 @@
 use std::collections::HashMap;
 
-use super::{
-    font_style::FontStyle,
-    interpolation_value::InterpolationValue,
-    variable_enum::{VariableEnum, VariableStorage},
-};
+use super::variable_enum::VariableStorage;
 
 #[derive(Debug, Clone)]
 pub struct TextSegment {

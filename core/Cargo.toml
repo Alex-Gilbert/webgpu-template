@@ -24,3 +24,4 @@ wgpu_text.workspace = true
 web-time.workspace = true
 winit.workspace = true
 serde.workspace = true
+serde_json.workspace = true

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, marker::PhantomData};
+use glam::Vec2;
 
 use crate::{gpu_resources::types::font_types::FontVertex, utils::Bounds};
 
@@ -217,7 +217,7 @@ impl TextObject {
                                 // |       |
                                 // 0 ------ 3
                                 vertex_buffer.push(FontVertex {
-                                    position: translated_plane_bounds.get_bottom_left().into(),
+                                    position: translated_plane_bounds.get_bottom_left().extend(0.0),
                                     color: style.color.into(),
                                     altas_coords: atlas_bounds.get_bottom_left(),
                                     glyph_coords: Vec2::new(0.0, 0.0),
@@ -225,7 +225,7 @@ impl TextObject {
                                 });
 
                                 vertex_buffer.push(FontVertex {
-                                    position: translated_plane_bounds.get_top_left().into(),
+                                    position: translated_plane_bounds.get_top_left().extend(0.0),
                                     color: style.color.into(),
                                     altas_coords: atlas_bounds.get_top_left(),
                                     glyph_coords: Vec2::new(0.0, 1.0),
@@ -233,7 +233,7 @@ impl TextObject {
                                 });
 
                                 vertex_buffer.push(FontVertex {
-                                    position: translated_plane_bounds.get_top_right().into(),
+                                    position: translated_plane_bounds.get_top_right().extend(0.0),
                                     color: style.color.into(),
                                     altas_coords: atlas_bounds.get_top_right(),
                                     glyph_coords: Vec2::new(1.0, 1.0),
@@ -241,7 +241,9 @@ impl TextObject {
                                 });
 
                                 vertex_buffer.push(FontVertex {
-                                    position: translated_plane_bounds.get_bottom_right().into(),
+                                    position: translated_plane_bounds
+                                        .get_bottom_right()
+                                        .extend(0.0),
                                     color: style.color.into(),
                                     altas_coords: atlas_bounds.get_bottom_right(),
                                     glyph_coords: Vec2::new(1.0, 0.0),

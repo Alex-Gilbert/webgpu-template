@@ -3,9 +3,9 @@ use std::{
     marker::PhantomData,
 };
 
-use super::handle_collection::HandleCollection;
+use bevy_ecs::component::Component;
 
-#[derive(Debug, Copy, Eq)]
+#[derive(Component, Debug, Copy, Eq)]
 pub struct AssetHandle<T> {
     id: usize,
     _phantom: PhantomData<T>,

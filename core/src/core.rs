@@ -7,11 +7,11 @@ use rand::Rng;
 use wgpu::{CommandBuffer, TextureFormat};
 
 use crate::{
+    asset_management::asset_bank::AssetBank,
     ecs::{
         components::{
-            gpu_bindings::model_bindings::ModelBindings,
-            materials::unlit_diffuse_material::UnlitDiffuseMaterial,
-            rotate_component::RotateComponent, transform::Transform,
+            gpu_bindings::model_bindings::ModelBindings, rotate_component::RotateComponent,
+            transform::Transform,
         },
         entity_bundles::camera_bundle::CameraBundle,
         resources::{
@@ -29,8 +29,9 @@ use crate::{
         },
     },
     gpu_resources, include_texture,
+    materials::unlit_diffuse_material::UnlitDiffuseMaterial,
     render::root_renderer::RootRenderer,
-    text_engine::text_object::TextObject,
+    text_engine::{font_data::FontData, text_object::TextObject},
     traits::{apc_traits::ApcHandler, http_traits::HttpRequester},
     utils::{Bounds, primitives},
 };
@@ -89,8 +90,13 @@ impl Core {
         world.spawn(camera_bundle);
         let root_renderer = RootRenderer::new(&mut world, render_width, render_height);
 
+        // create asset banks
+        let mut unlit_material_assets: AssetBank<UnlitDiffuseMaterial> = AssetBank::new();
+
         // spawn a cube
-        let texture = include_texture!("media/textures/handsome.jpg", &device, &queue);
+        let handsome_texture = include_texture!("media/textures/handsome.jpg", &device, &queue);
+        let cube_material_handle =
+            unlit_material_assets.add(UnlitDiffuseMaterial::new(&world, &handsome_texture));
 
         let mut rng = rand::thread_rng();
         for _ in 0..100 {
@@ -102,7 +108,6 @@ impl Core {
 
             let cube_mesh_filter = primitives::create_cube(&device, rng.gen_range(0.5..1.0), 1);
             let cube_model_bindings = ModelBindings::new(&world, &device, &mut cube_transform);
-            let cube_material = UnlitDiffuseMaterial::new(&world, &texture);
             let cube_rotate_component = RotateComponent {
                 rotate_axis: vec3(
                     rng.gen_range(-1.0..1.0),
@@ -116,7 +121,7 @@ impl Core {
                 cube_transform,
                 cube_mesh_filter,
                 cube_model_bindings,
-                cube_material,
+                cube_material_handle.clone(),
                 cube_rotate_component,
             ));
         }
@@ -125,6 +130,9 @@ impl Core {
         {
             let mut text_object = TextObject::new("Hello, World!".to_string())
                 .with_bounds(Bounds::new_with_size(Vec2::new(30.0, 30.0)).centered_at(Vec2::ZERO));
+            let font_data: FontData =
+                serde_json::from_str(include_str!("media/fonts/inter_mtsdf.json"))
+                    .expect("could not parse font");
         }
 
         let mut early_update_schedule = Schedule::default();
@@ -138,6 +146,9 @@ impl Core {
 
         pre_render_schedule.add_systems(update_camera_bindings);
         pre_render_schedule.add_systems(update_model_bindings_system);
+
+        // add the asset banks
+        world.insert_resource(unlit_material_assets);
 
         Self {
             world,

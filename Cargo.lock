@@ -772,6 +772,7 @@ dependencies = [
  "paste",
  "rand",
  "serde",
+ "serde_json",
  "toml",
  "web-time 1.1.0",
  "wgpu",

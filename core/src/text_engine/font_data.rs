@@ -1,10 +1,6 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Deserializer};
 
 use crate::utils::Bounds;
-
-use super::utils::unicode_codepoint_to_ascii_decimal;
 
 #[derive(Deserialize, Debug)]
 pub enum FontAtlasType {

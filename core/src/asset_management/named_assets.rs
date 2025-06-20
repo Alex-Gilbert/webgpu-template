@@ -2,9 +2,7 @@ use std::collections::HashMap;
 
 use bevy_ecs::system::Resource;
 
-use super::{
-    asset_handle::AssetHandle, handle_collection::HandleCollection, handle_range::HandleRange,
-};
+use super::asset_handle::AssetHandle;
 
 #[derive(Resource, Default)]
 pub struct NamedAssets<T> {
@@ -30,17 +28,6 @@ impl<T> NamedAssets<T> {
     /// Check if a name is registered
     pub fn contains(&self, name: &str) -> bool {
         self.names.contains_key(name)
-    }
-
-    /// Add any collection of handles with numbered names
-    pub fn insert_collection<C>(&mut self, prefix: &str, collection: &C)
-    where
-        C: HandleCollection<T>,
-    {
-        for (i, handle) in collection.iter_handles().enumerate() {
-            let name = format!("{}_{}", prefix, i);
-            self.insert(name, handle);
-        }
     }
 
     /// Get a collection of handles by their named pattern

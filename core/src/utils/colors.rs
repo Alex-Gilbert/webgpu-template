@@ -613,3 +613,14 @@ impl From<wgpu::Color> for Color {
         Srgb::from(color).into()
     }
 }
+
+impl Into<glam::Vec4> for Color {
+    fn into(self) -> glam::Vec4 {
+        glam::Vec4 {
+            x: self.r,
+            y: self.g,
+            z: self.b,
+            w: self.a,
+        }
+    }
+}

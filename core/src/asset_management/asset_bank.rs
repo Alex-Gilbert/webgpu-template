@@ -1,11 +1,11 @@
 use bevy_ecs::system::Resource;
 
-use super::{asset_handle::AssetHandle, handle_range::HandleRange};
+use super::asset_handle::AssetHandle;
 
 /// A store of assets, this is meant to be a resource in the ECS
 #[derive(Resource)]
 pub struct AssetBank<T> {
-    pub(crate) assets: Vec<T>,
+    assets: Vec<T>,
     next_id: usize,
 }
 
@@ -21,14 +21,6 @@ impl<T> Default for AssetBank<T> {
 impl<T> AssetBank<T> {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// Pre-allocate exact capacity (useful for batch loading)
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self {
-            assets: Vec::with_capacity(capacity),
-            next_id: 0,
-        }
     }
 
     /// Add an asset and get a handle to it
@@ -47,14 +39,5 @@ impl<T> AssetBank<T> {
     /// Get asset by handle (mutable)
     pub fn get_asset_mut(&mut self, handle: &AssetHandle<T>) -> Option<&mut T> {
         self.assets.get_mut(handle.id())
-    }
-
-    /// Number of assets stored
-    pub fn len(&self) -> usize {
-        self.assets.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.assets.is_empty()
     }
 }
